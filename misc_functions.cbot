@@ -69,12 +69,12 @@ public class Logger {
 
 // Go.
 // goto() with errmode(0)
-void go(object target) {
-	go(target.position);
+void go(object target, float alt = 0.0) {
+	go(target.position, alt);
 }
-void go(point target) {
+void go(point target, float alt = 0.0) {
 	errmode(0);
-	goto(target);
+	goto(target, alt);
 	errmode(1);
 }
 
