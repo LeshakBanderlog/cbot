@@ -1,0 +1,124 @@
+// Mission 2-1 ore collector
+
+extern void object::oreCollector() {
+	object[] targets;
+
+	// Wait for battery
+	do {
+		wait(1);
+	} while (energyCell == null);
+	supply(BlackBox, SpaceShip);
+
+	// Collect ore
+	targets = radarall(TitaniumOre);
+	for (int i=0; i<sizeof(targets); i++) {
+		if (energyCell.energyLevel < 0.3) {
+			recharge();
+		}
+		supply(targets[i], SpaceShip);
+	}
+
+	// Finita
+	message("10 seconds to go");
+	wait(10);
+	radar(SpaceShip).takeoff();
+}
+
+// Supply.
+// Overloaded functions for bring item to destination object.
+/* Returns:
+	0 - if finished
+	1 - if item not found
+	2 - if target not found
+*/
+// Depends on go()
+int supply(int what, int where) {
+	object target;
+	int err;
+
+	target = radar(what);
+	if (target == null) return 1;
+	go(target.position);
+	grab();
+
+	target = radar(where);
+	if (target == null) return 2;
+	go(target.position);
+	errmode(0);
+	err = drop();
+	while (err != 0) {
+		move(-1);
+		turn(90);
+		err = drop();
+		turn(-90);
+	}
+	errmode(1);
+
+	return 0;
+}
+int supply(object what, int where) {
+	object target;
+	int err;
+
+	if (what == null) return 1;
+	go(what.position);
+	grab();
+
+	target = radar(where);
+	if (target == null) return 2;
+	go(target.position);
+	errmode(0);
+	err = drop();
+	while (err != 0) {
+		move(-1);
+		turn(90);
+		err = drop();
+		turn(-90);
+	}
+	errmode(1);
+
+	return 0;
+}
+
+// Go.
+// goto() with errmode(0)
+void go(object target) {
+	go(target.position);
+}
+void go(point target) {
+	errmode(0);
+	goto(target);
+	errmode(1);
+}
+
+// Recharge.
+// Try to recharge or swap battery.
+/* Returns:
+	0 if done
+	1 if no power supply
+*/
+// Depends on go()
+int object::recharge() {
+	object target;
+
+	target = radar(PowerStation);
+	if (target != null) {
+		go(target.position);
+		while (energyCell.energyLevel < 1) wait(1);
+		return 0;
+	}
+
+	target = radar(PowerCell);
+	if (target != null) {
+		go(target.position);
+		grab(EnergyCell);
+		drop(Behind);
+		grab();
+		drop(EnergyCell);
+		grab(Behind);
+		drop();
+		return 0;
+	}
+
+	return 1;
+}
