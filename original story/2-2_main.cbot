@@ -2,20 +2,26 @@
 
 extern void object::main() {
 	object target;
+	float dir;
 
 	while(true)	{
-		target = radar(Target2,0,180,1,100);
+		target = radar(Target2, 0,180, 1,100);
 		if(target == null)
 		{
-			target = radar(SpaceShip,0,180,1,100);
+			target = radar(SpaceShip, 0,180, 1,100);
 			turn(direction(target.position));
 			move(distance(position, target.position));
 			break;
 		}
-		if(target.position.z > position.z) jet(0.3);
-		if(target.position.z < position.z) jet(-0.3);
-		if(direction(target.position) > 2) motor(0.5,1);
-		if(direction(target.position) < 2) motor(1,0.5);
-		if(abs(direction(target.position)) <= 2) motor(1,1);
+		dir = direction(target.position);
+		if(target.position.z > position.z) {
+			jet(1-1/abs(target.position.z - position.z)-0.3);
+		}
+		if(target.position.z < position.z) {
+			jet(-(1-1/abs(target.position.z - position.z)-0.2));
+		}
+		if(dir > 2) motor(1-dir/60, 1);
+		if(dir < 2) motor(1, 1-abs(dir/60));
+		if(abs(direction(target.position)) <= 2) motor(1, 1);
 	}
 }
