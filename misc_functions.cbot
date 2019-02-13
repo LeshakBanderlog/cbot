@@ -262,7 +262,7 @@ int object::recharge() {
 	target = radar(PowerStation);
 	if (target != null) {
 		go(target.position);
-		while (energyCell.energyLeve < 1) wait(1);
+		while (energyCell.energyLevel < 1) wait(1);
 		return 0;
 	}
 
