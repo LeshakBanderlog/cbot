@@ -69,10 +69,10 @@ public class Logger {
 
 // Go.
 // goto() with errmode(0)
-void go(object target, float alt = 0.0) {
+void go(object target, float alt = 10.0) {
 	go(target.position, alt);
 }
-void go(point target, float alt = 0.0) {
+void go(point target, float alt = 10.0) {
 	errmode(0);
 	goto(target, alt);
 	errmode(1);
@@ -92,13 +92,14 @@ int supply(int what, int where) {
 
 	target = radar(what);
 	if (target == null) return 1;
-	go(target.position);
+	go(target);
 	grab();
 
 	target = radar(where);
 	if (target == null) return 2;
-	go(target.position);
+	go(target);
 	drop();
+	move(-2.5);
 
 	return 0;
 }
@@ -107,12 +108,13 @@ int supply(int what, object where) {
 
 	target = radar(what);
 	if (target == null) return 1;
-	go(target.position);
+	go(target);
 	grab();
 
 	if (where == null) return 2;
-	go(where.position);
+	go(where);
 	drop();
+	move(-2.5);
 
 	return 0;
 }
@@ -120,25 +122,27 @@ int supply(object what, int where) {
 	object target;
 
 	if (what == null) return 1;
-	go(what.position);
+	go(what);
 	grab();
 
 	target = radar(where);
 	if (target == null) return 2;
-	go(target.position);
+	go(target);
 	drop();
+	move(-2.5);
 
 	return 0;
 }
 int supply(object what, object where) {
 
 	if (what == null) return 1;
-	go(what.position);
+	go(what);
 	grab();
 
 	if (where == null) return 2;
-	go(where.position);
+	go(where);
 	drop();
+	move(-2.5);
 
 	return 0;
 }
@@ -159,7 +163,7 @@ int newBuilding(int type) {
 
 	target = radar(Titanium);
 	if (target == null) return 1;
-	go(target.position);
+	go(target);
 	grab();
 
 	go(spot);
@@ -190,10 +194,10 @@ int newBot(int type, string firmwareFile) {
 
 	res = radar(Titanium);
 	if (res == null) return 2;
-	go(res.position);
+	go(res);
 	grab();
 
-	go(target.position);
+	go(target);
 	drop();
 	move(-3);
 
@@ -205,15 +209,15 @@ int newBot(int type, string firmwareFile) {
 
 	res = radar(PowerCell);
 	if (res == null) return 3;
-	go(res.position);
+	go(res);
 	grab();
 
-	go(target.position);
+	go(target);
 	do {
 		target = radar(type, 0,45, 0,5);
 		wait(1);
 	} while (target == null);
-	go(target.position);
+	go(target);
 	drop();
 	move(-5);
 	return 0;
@@ -238,7 +242,7 @@ int newResearch(int type) {
 		err = supply(PowerCell, target);
 		if (err == 1) return 2;
 	} else if (target.energyCell.energyLevel < 1) {
-		go(target.position);
+		go(target);
 		grab();
 		drop(Behind);
 		err = supply(PowerCell, target);
@@ -261,14 +265,15 @@ int object::recharge() {
 
 	target = radar(PowerStation);
 	if (target != null) {
-		go(target.position);
+		while (target.busy()) wait(1);
+		go(target);
 		while (energyCell.energyLevel < 1) wait(1);
 		return 0;
 	}
 
 	target = radar(PowerCell);
 	if (target != null) {
-		go(target.position);
+		go(target);
 		grab(EnergyCell);
 		drop(Behind);
 		grab();
