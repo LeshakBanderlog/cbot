@@ -69,6 +69,9 @@ public class Logger {
 
 // Go.
 // goto() with errmode(0)
+void go(object target) {
+	go(target.position);
+}
 void go(point target) {
 	errmode(0);
 	goto(target);
@@ -105,6 +108,32 @@ int supply(int what, object where) {
 	target = radar(what);
 	if (target == null) return 1;
 	go(target.position);
+	grab();
+
+	if (where == null) return 2;
+	go(where.position);
+	drop();
+
+	return 0;
+}
+int supply(object what, int where) {
+	object target;
+
+	if (what == null) return 1;
+	go(what.position);
+	grab();
+
+	target = radar(where);
+	if (target == null) return 2;
+	go(target.position);
+	drop();
+
+	return 0;
+}
+int supply(object what, object where) {
+
+	if (what == null) return 1;
+	go(what.position);
 	grab();
 
 	if (where == null) return 2;
