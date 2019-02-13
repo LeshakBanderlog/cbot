@@ -1,0 +1,41 @@
+// Mission 1-3 box delivery
+
+
+extern void object::boxDelivery() {
+	do {
+		wait(1);
+	} while (energyCell == null);
+	supply(BlackBox, SpaceShip);
+
+	message("Start 10sec countdown");
+	for (int i=10; i>0; i--) {
+		message(i);
+		wait(1);
+	}
+	message("Takeoff!");
+	radar(SpaceShip.).takeoff();
+}
+
+// Utility
+
+int supply(int what, int where) {
+	object target;
+
+	target = radar(what);
+	if (target == null) return 1;
+	go(target.position);
+	grab();
+
+	target = radar(where);
+	if (target == null) return 2;
+	go(target.position);
+	drop();
+
+	return 0;
+}
+
+void go(point target) {
+	errmode(0);
+	goto(target);
+	errmode(1);
+}

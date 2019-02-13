@@ -1,0 +1,116 @@
+// Mission 1-3 main script
+
+extern void object::main() {
+
+	// Research tracked bot
+	newResearch(ResearchTracked);
+
+	// Build tracked bot
+	newBot(TrackedGrabber, "1-3_boxdelivery.cbot");
+
+	// Go to spaceship
+	go(radar(SpaceShip).position);
+}
+
+// Utility
+
+int newResearch(int type) {
+	object target;
+	int err;
+
+	target = radar(ResearchCenter);
+	if (target == null) return 1;
+	if (target.energyCell == null) {
+		err = supply(PowerCell, target);
+		if (err == 1) return 2;
+	} else if (target.energyCell.energyLevel < 1) {
+		go(target.position);
+		grab();
+		drop(Behind);
+		err = supply(PowerCell, target);
+		if (err == 1) return 2;
+	}
+	target.research(type);
+	return 0;
+}
+
+int newBot(int type, string firmwareFile) {
+	object target;
+	object res;
+	file   f();
+	string firmware = "";
+
+	target = radar(BotFactory);
+	if (target == null) return 1;
+
+	res = radar(Titanium);
+	if (res == null) return 2;
+	go(res.position);
+	grab();
+
+	go(target.position);
+	if (target.busy()) {
+		move(-5);
+		while (target.busy()) wait(1);
+	}
+	go(target.position);
+	drop();
+	move(-3);
+
+	f.open(firmwareFile, "r");
+	while (not f.eof()) {
+		firmware += f.readln() + "\n";
+	}
+	target.factory(type, firmware);
+
+	res = radar(PowerCell);
+	if (res == null) return 3;
+	go(res.position);
+	grab();
+
+	go(target.position);
+	do {
+		target = radar(type, 0,45, 0,5);
+		wait(1);
+	} while (target == null);
+	go(target.position);
+	drop();
+	move(-5);
+	return 0;
+}
+
+int supply(int what, int where) {
+	object target;
+
+	target = radar(what);
+	if (target == null) return 1;
+	go(target.position);
+	grab();
+
+	target = radar(where);
+	if (target == null) return 2;
+	go(target.position);
+	drop();
+
+	return 0;
+}
+int supply(int what, object where) {
+	object target;
+
+	target = radar(what);
+	if (target == null) return 1;
+	go(target.position);
+	grab();
+
+	if (where == null) return 2;
+	go(where.position);
+	drop();
+
+	return 0;
+}
+
+void go(point target) {
+	errmode(0);
+	goto(target);
+	errmode(1);
+}

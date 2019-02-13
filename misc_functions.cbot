@@ -1,0 +1,253 @@
+// Miscellaneous utility functions
+// List:
+//	- logger
+//	- go()
+//	- supply()
+//  - newBuilding()
+//	- newBot()
+//	- newResearch()
+//	- recharge()
+
+
+// Simple logging.
+// Log text to file (and on screen, if onScreen is true).
+/*
+Logger log("ExterminatorBot01");
+log.info("Must exterminate!");
+*/
+public class Logger {
+	private string  name;
+	private boolean onScreen;
+	private boolean isNew;
+
+	void Logger(string name, boolean onScreen = true) {
+		this.name = name;
+		this.onScreen = onScreen;
+		this.isNew = true;
+	}
+
+	void msg(string text) {
+		if (this.onScreen) {
+			message("text", DisplayMessage);
+		}
+		toFile("[" + abstime() + "] MESSAGE - " + text);
+	}
+	void info(string text) {
+		if (this.onScreen) {
+			message("text", DisplayInfo);
+		}
+		toFile("[" + abstime() + "] INFO - " + text);
+	}
+	void warn(string text) {
+		if (this.onScreen) {
+			message("text", DisplayWarning);
+		}
+		toFile("[" + abstime() + "] WARNING - " + text);
+	}
+	void err(string text) {
+		if (this.onScreen) {
+			message("text", DisplayError);
+		}
+		toFile("[" + abstime() + "] ERROR - " + text);
+	}
+
+	void toFile(string text) {
+		file f();
+
+		if (this.isNew) {
+			f.open("log/" + this.name, "a");
+			f.writeln("\n---------- New log ----------\n");
+			f.close();
+			this.isNew = false;
+		}
+		f.open("log/" + this.name, "a");
+		f.writeln(text);
+		f.close();
+	}
+}
+
+
+// Go.
+// goto() with errmode(0)
+void go(point target) {
+	errmode(0);
+	goto(target);
+	errmode(1);
+}
+
+
+// Supply.
+// Overloaded functions for bring item to destination object.
+/* Returns:
+	0 - if finished
+	1 - if item not found
+	2 - if target not found
+*/
+// Depends on go()
+int supply(int what, int where) {
+	object target;
+
+	target = radar(what);
+	if (target == null) return 1;
+	go(target.position);
+	grab();
+
+	target = radar(where);
+	if (target == null) return 2;
+	go(target.position);
+	drop();
+
+	return 0;
+}
+int supply(int what, object where) {
+	object target;
+
+	target = radar(what);
+	if (target == null) return 1;
+	go(target.position);
+	grab();
+
+	if (where == null) return 2;
+	go(where.position);
+	drop();
+
+	return 0;
+}
+
+
+// New building.
+// Find spot. Find titanium. Deliver it to spot. Build.
+/* Returns:
+	0 if done
+	1 if no Titanium
+*/
+// Depends on go()
+int newBuilding(int type) {
+	object target;
+	point  spot;
+
+	spot = flatspace(radar(SpaceShip).position, 10 , 25, 100, 5);
+
+	target = radar(Titanium);
+	if (target == null) return 1;
+	go(target.position);
+	grab();
+
+	go(spot);
+	drop();
+	move(-4);
+	build(type);
+	return(0);
+}
+
+
+// New bot.
+// Titanium for BotFactory. New bot in factory. Program and energy for new bot.
+/* Returns:
+	0 if done
+	1 if no BotFactory
+	2 if no Titanium
+	3 if no battery
+*/
+// Depends on go()
+int newBot(int type, string firmwareFile) {
+	object target;
+	object res;
+	file   f();
+	string firmware = "";
+
+	target = radar(BotFactory);
+	if (target == null) return 1;
+
+	res = radar(Titanium);
+	if (res == null) return 2;
+	go(res.position);
+	grab();
+
+	go(target.position);
+	drop();
+	move(-3);
+
+	f.open(firmwareFile, "r");
+	while (not f.eof()) {
+		firmware += f.readln() + "\n";
+	}
+	target.factory(type, firmware);
+
+	res = radar(PowerCell);
+	if (res == null) return 3;
+	go(res.position);
+	grab();
+
+	go(target.position);
+	do {
+		target = radar(type, 0,45, 0,5);
+		wait(1);
+	} while (target == null);
+	go(target.position);
+	drop();
+	move(-5);
+	return 0;
+}
+
+
+// New research.
+// Start new research if it can.
+/* Returns:
+	0 if done
+	1 if no ResearchCenter
+	2 if no battery
+*/
+// Depends on go(), supply()
+int newResearch(int type) {
+	object target;
+	int err;
+
+	target = radar(ResearchCenter);
+	if (target == null) return 1;
+	if (target.energyCell == null) {
+		err = supply(PowerCell, target);
+		if (err == 1) return 2;
+	} else if (target.energyCell.energyLevel < 1) {
+		go(target.position);
+		grab();
+		drop(Behind);
+		err = supply(PowerCell, target);
+		if (err == 1) return 2;
+	}
+	target.research(type);
+	return 0;
+}
+
+
+// Recharge.
+// Try to recharge or swap battery.
+/* Returns:
+	0 if done
+	1 if no power supply
+*/
+// Depends on go()
+int object::recharge() {
+	object target;
+
+	target = radar(PowerStation);
+	if (target != null) {
+		go(target.position);
+		while (energyCell.energyLeve < 1) wait(1);
+		return 0;
+	}
+
+	target = radar(PowerCell);
+	if (target != null) {
+		go(target.position);
+		grab(EnergyCell);
+		drop(Behind);
+		grab();
+		drop(EnergyCell);
+		grab(Behind);
+		drop();
+		return 0;
+	}
+
+	return 1;
+}
