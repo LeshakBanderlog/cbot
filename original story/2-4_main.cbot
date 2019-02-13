@@ -1,0 +1,79 @@
+// Mission 2-4 main code
+
+extern void object::main() {
+	object target;
+
+	// Build converter
+	newBuilding(Converter);
+	turn(-90);
+	move(10);
+
+	// Build power station
+	while (radar(Titanium) == null) wait(1);
+	wait(10);
+	newBuilding(PowerStation);
+
+	// Recharge
+	wait(20);
+	recharge();
+
+	// Build radar
+	while (radar(Titanium) == null) wait(1);
+	newBuilding(RadarStation);
+
+	// Go home
+	go(radar(SpaceShip));
+}
+
+int newBuilding(int type) {
+	object target;
+	point  spot;
+
+	spot = flatspace(radar(SpaceShip).position, 10 , 25, 100, 5);
+
+	target = radar(Titanium);
+	if (target == null) return 1;
+	go(target);
+	grab();
+
+	go(spot);
+	drop();
+	move(-4);
+	build(type);
+	return(0);
+}
+
+int object::recharge() {
+	object target;
+
+	target = radar(PowerStation);
+	if (target != null) {
+		while (target.busy()) wait(1);
+		go(target);
+		while (energyCell.energyLevel < 1) wait(1);
+		return 0;
+	}
+
+	target = radar(PowerCell);
+	if (target != null) {
+		go(target);
+		grab(EnergyCell);
+		drop(Behind);
+		grab();
+		drop(EnergyCell);
+		grab(Behind);
+		drop();
+		return 0;
+	}
+
+	return 1;
+}
+
+void go(object target, float alt = 10.0) {
+	go(target.position, alt);
+}
+void go(point target, float alt = 10.0) {
+	errmode(0);
+	goto(target, alt);
+	errmode(1);
+}
